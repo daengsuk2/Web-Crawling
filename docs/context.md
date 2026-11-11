@@ -6,8 +6,8 @@
 - DB       : PostgreSQL 16 (schema in crawler/schema.sql)
 
 ## Source
-- Zenn RSS: https://zenn.dev/feed (Japanese, UTF-8). robots.txt only disallows /search.
-- source.type supports RSS and HTML so more sources can be added later.
+- Sources: Zenn, ITmedia, ASCII.jp (RSS) and Hatena IT hot entries (HTML); see crawler/seed.sql and the README table.
+- source.type supports RSS and HTML. interval_min must be at least 10 minutes.
 
 ## Rules
 - The schema is owned by crawler/schema.sql; Spring uses ddl-auto=validate.

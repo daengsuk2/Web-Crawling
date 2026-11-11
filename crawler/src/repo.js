@@ -4,7 +4,8 @@ import { pool } from './db.js';
 const hashOf = (it) =>
   createHash('sha256').update(`${it.title}|${it.summary ?? ''}`).digest('hex');
 
-// C3: UPSERT on url. R1 insert, R2 content changed -> updated_at, R3 unchanged -> last_seen_at only
+// C3: UPSERT on url. R1 insert, R2 content changed -> updated_at, R3 unchanged -> last_seen_at only.
+// The source that saved a url first owns it, so two sources listing the same article never overwrite each other.
 export async function upsertArticle(sourceId, it) {
   const { rows } = await pool.query(
     `INSERT INTO article (source_id, url, title, summary, published_at, content_hash)
@@ -14,13 +15,16 @@ export async function upsertArticle(sourceId, it) {
        summary      = EXCLUDED.summary,
        content_hash = EXCLUDED.content_hash,
        last_seen_at = now(),
-       updated_at   = CASE WHEN article.content_hash IS DISTINCT FROM EXCLUDED.content_hash
+       updated_at   = CASE WHEN (article.title, article.summary, article.content_hash)
+                                IS DISTINCT FROM (EXCLUDED.title, EXCLUDED.summary, EXCLUDED.content_hash)
                            THEN now() ELSE article.updated_at END
+     WHERE article.source_id = EXCLUDED.source_id
      RETURNING (xmax = 0) AS inserted,
                (article.updated_at = now()) AS changed`,
     [sourceId, it.url.slice(0, 1000), it.title.slice(0, 500), it.summary, it.publishedAt, hashOf(it)],
   );
-  return rows[0];
+  // no row: the url already belongs to another source, which stays its owner
+  return rows[0] ?? { inserted: false, changed: false };
 }
 
 // C5: crawl_run history

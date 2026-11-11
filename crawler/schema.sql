@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS source (
     url              VARCHAR(500) NOT NULL UNIQUE,
     list_selector    VARCHAR(200),
     enabled          BOOLEAN      NOT NULL DEFAULT TRUE,
-    interval_min     INT          NOT NULL DEFAULT 10 CHECK (interval_min >= 1),
+    interval_min     INT          NOT NULL DEFAULT 10 CHECK (interval_min >= 10),
     last_crawled_at  TIMESTAMPTZ
 );
 
