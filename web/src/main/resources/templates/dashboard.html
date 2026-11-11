@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="60"> <!-- D7: auto refresh -->
+  <title>YNC Tech Radar</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/startbootstrap-sb-admin-2@4.1.4/css/sb-admin-2.min.css">
+</head>
+<body id="page-top" class="bg-light">
+<div class="container-fluid py-4">
+
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">YNC Tech Radar</h1>
+    <a th:href="@{/articles}" class="btn btn-sm btn-primary shadow-sm">All articles</a>
+  </div>
+
+  <!-- D1: summary cards -->
+  <div class="row">
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-primary shadow h-100 py-2"><div class="card-body">
+        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total articles</div>
+        <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${#numbers.formatInteger(summary.totalArticles, 1, 'COMMA')}">0</div>
+      </div></div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-success shadow h-100 py-2"><div class="card-body">
+        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">New today</div>
+        <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${summary.todayNew}">0</div>
+      </div></div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-info shadow h-100 py-2"><div class="card-body">
+        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Active sources</div>
+        <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${summary.enabledSources}">0</div>
+      </div></div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-danger shadow h-100 py-2"><div class="card-body">
+        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Failed runs (24h)</div>
+        <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${summary.failedRuns24h}">0</div>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- D3, D4: charts -->
+  <div class="row">
+    <div class="col-xl-7 mb-4">
+      <div class="card shadow"><div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">New articles per hour (24h)</h6></div>
+        <div class="card-body"><canvas id="hourlyChart" height="110"></canvas></div></div>
+    </div>
+    <div class="col-xl-5 mb-4">
+      <div class="card shadow"><div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Keyword TOP 10 (7 days)</h6></div>
+        <div class="card-body"><canvas id="keywordChart" height="150"></canvas></div></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- D6: source on/off -->
+    <div class="col-xl-5 mb-4">
+      <div class="card shadow"><div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Sources</h6></div>
+        <div class="card-body p-0"><table class="table table-sm mb-0">
+          <thead><tr><th>Name</th><th>Type</th><th>Every</th><th>Last crawled</th><th></th></tr></thead>
+          <tbody>
+          <tr th:each="s : ${sources}">
+            <td th:text="${s.name}">Zenn</td>
+            <td th:text="${s.type}">RSS</td>
+            <td th:text="${s.intervalMin} + ' min'">30 min</td>
+            <td th:text="${s.lastCrawledAt != null ? #temporals.format(s.lastCrawledAt, 'MM-dd HH:mm') : '-'}">-</td>
+            <td>
+              <form th:action="@{/sources/{id}/toggle(id=${s.id})}" method="post" class="m-0">
+                <button type="submit" class="btn btn-sm"
+                        th:classappend="${s.enabled} ? 'btn-success' : 'btn-secondary'"
+                        th:text="${s.enabled} ? 'ON' : 'OFF'">ON</button>
+              </form>
+            </td>
+          </tr>
+          </tbody></table></div></div>
+    </div>
+
+    <!-- D5: crawl history -->
+    <div class="col-xl-7 mb-4">
+      <div class="card shadow"><div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Recent crawl runs</h6></div>
+        <div class="card-body p-0"><table class="table table-sm mb-0">
+          <thead><tr><th>Started</th><th>Source</th><th>Status</th><th>Fetched</th><th>New</th><th>Updated</th><th>Error</th></tr></thead>
+          <tbody>
+          <tr th:each="r : ${runs}" th:classappend="${r.status == 'FAILED'} ? 'table-danger'">
+            <td th:text="${#temporals.format(r.startedAt, 'MM-dd HH:mm:ss')}">-</td>
+            <td th:text="${r.source.name}">Zenn</td>
+            <td th:text="${r.status}">SUCCESS</td>
+            <td th:text="${r.fetchedCount}">0</td>
+            <td th:text="${r.insertedCount}">0</td>
+            <td th:text="${r.updatedCount}">0</td>
+            <td class="text-danger small" th:text="${r.errorMessage}"></td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(runs)}"><td colspan="7" class="text-center text-muted">No runs yet</td></tr>
+          </tbody></table></div></div>
+    </div>
+  </div>
+
+  <!-- D2: latest articles -->
+  <div class="card shadow mb-4"><div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Latest articles</h6></div>
+    <div class="card-body p-0"><table class="table table-sm table-hover mb-0">
+      <thead><tr><th>Seen</th><th>Source</th><th>Title</th></tr></thead>
+      <tbody>
+      <tr th:each="a : ${articles}">
+        <td class="text-nowrap" th:text="${#temporals.format(a.firstSeenAt, 'MM-dd HH:mm')}">-</td>
+        <td th:text="${a.source.name}">Zenn</td>
+        <td><a th:href="${a.url}" th:text="${a.title}" target="_blank" rel="noopener">title</a></td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(articles)}"><td colspan="3" class="text-center text-muted">No articles yet</td></tr>
+      </tbody></table></div></div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
+<script th:inline="javascript">
+  const hourly = /*[[${hourly}]]*/ { labels: [], values: [] };
+  const keywords = /*[[${keywords}]]*/ { labels: [], values: [] };
+  const intTicks = { beginAtZero: true, precision: 0 };
+
+  new Chart(document.getElementById('hourlyChart'), {
+    type: 'line',
+    data: { labels: hourly.labels, datasets: [{ label: 'New articles', data: hourly.values,
+      borderColor: '#4e73df', backgroundColor: 'rgba(78,115,223,0.1)', lineTension: 0.2 }] },
+    options: { legend: { display: false }, scales: { yAxes: [{ ticks: intTicks }] } }
+  });
+
+  new Chart(document.getElementById('keywordChart'), {
+    type: 'horizontalBar',
+    data: { labels: keywords.labels, datasets: [{ label: 'Articles', data: keywords.values, backgroundColor: '#1cc88a' }] },
+    options: { legend: { display: false }, scales: { xAxes: [{ ticks: intTicks }] } }
+  });
+</script>
+</body>
+</html>

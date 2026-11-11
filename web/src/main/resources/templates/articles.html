@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Articles - YNC Tech Radar</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/startbootstrap-sb-admin-2@4.1.4/css/sb-admin-2.min.css">
+</head>
+<body class="bg-light">
+<div class="container-fluid py-4">
+
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Articles</h1>
+    <a th:href="@{/}" class="btn btn-sm btn-primary shadow-sm">Dashboard</a>
+  </div>
+
+  <!-- D2: paged article list -->
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary" th:text="${page.totalElements} + ' articles'">0 articles</h6>
+    </div>
+    <div class="card-body p-0"><table class="table table-sm table-hover mb-0">
+      <thead><tr><th>Seen</th><th>Published</th><th>Source</th><th>Title</th></tr></thead>
+      <tbody>
+      <tr th:each="a : ${page.content}">
+        <td class="text-nowrap" th:text="${#temporals.format(a.firstSeenAt, 'MM-dd HH:mm')}">-</td>
+        <td class="text-nowrap" th:text="${a.publishedAt != null ? #temporals.format(a.publishedAt, 'MM-dd HH:mm') : '-'}">-</td>
+        <td th:text="${a.source.name}">Zenn</td>
+        <td><a th:href="${a.url}" th:text="${a.title}" target="_blank" rel="noopener">title</a></td>
+      </tr>
+      </tbody></table></div>
+  </div>
+
+  <nav th:if="${page.totalPages > 1}">
+    <ul class="pagination justify-content-center">
+      <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+        <a class="page-link" th:href="@{/articles(page=${page.number - 1})}">Prev</a></li>
+      <li class="page-item disabled"><span class="page-link" th:text="${page.number + 1} + ' / ' + ${page.totalPages}">1 / 1</span></li>
+      <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+        <a class="page-link" th:href="@{/articles(page=${page.number + 1})}">Next</a></li>
+    </ul>
+  </nav>
+
+</div>
+</body>
+</html>
