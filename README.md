@@ -37,6 +37,23 @@ http://localhost:8080 에서 확인합니다. DB 비밀번호는 환경변수(`D
 
 화면: 대시보드(`/`), 기사(`/articles`), 키워드(`/keywords`), 이력(`/runs`), 소스(`/sources`).
 
+### 서버 배포 (Java 17, Node 20, PostgreSQL 서버 기준)
+
+웹 jar는 Java 17용으로 컴파일됩니다(`web/build.gradle`의 `options.release = 17`). 비밀번호는 코드나 Git이 아니라 서버의 환경변수와 `crawler/.env`로만 넘깁니다.
+
+```bash
+# 서버에서 DB 준비
+psql -h localhost -U <DB계정> -d <DB이름> -f crawler/schema.sql
+psql -h localhost -U <DB계정> -d <DB이름> -f crawler/seed.sql
+
+# 크롤러 (crawler/.env 의 DATABASE_URL 을 서버 DB로 수정)
+cd crawler && npm install && nohup npm start > crawler.log 2>&1 &
+
+# 웹 (포트는 서버에서 배정받은 값)
+DB_URL=jdbc:postgresql://localhost:5432/<DB이름> DB_USER=<DB계정> DB_PASSWORD='<비밀번호>' SERVER_PORT=<포트> \
+  nohup java -jar radar-web-0.0.1-SNAPSHOT.jar > web.log 2>&1 &
+```
+
 ## 2. 수집 소스 표와 크롤링 윤리 체크리스트
 
 | 소스 | 유형 | 주소 | 주기 |

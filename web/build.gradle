@@ -13,6 +13,11 @@ java {
 	}
 }
 
+// The deploy server runs Java 17, so compile for 17 even though the build JDK is 21
+tasks.withType(JavaCompile).configureEach {
+	options.release = 17
+}
+
 repositories {
 	mavenCentral()
 }
