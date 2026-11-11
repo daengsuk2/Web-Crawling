@@ -44,7 +44,11 @@
                     <tbody>
                     <tr th:each="a : ${page.content}">
                         <td class="text-nowrap" th:text="${@timeFmt.format(a.firstSeenAt, 'yyyy-MM-dd HH:mm')}">-</td>
-                        <td class="text-nowrap" th:text="${@timeFmt.format(a.publishedAt, 'yyyy-MM-dd HH:mm')}">-</td>
+                        <td class="text-nowrap">
+                            <span th:if="${a.publishedAt != null}" th:text="${@timeFmt.format(a.publishedAt, 'yyyy-MM-dd HH:mm')}">2026-11-11 10:00</span>
+                            <!-- HTML 목록 페이지에는 발행 시각이 없다 -->
+                            <span class="small text-gray-500" th:if="${a.publishedAt == null}">정보 없음</span>
+                        </td>
                         <td th:text="${a.source.name}">Zenn</td>
                         <td><a th:href="${a.url}" th:text="${a.title}" target="_blank" rel="noopener">제목</a></td>
                     </tr>
