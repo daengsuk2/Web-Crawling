@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>키워드</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="h3 mb-4 text-gray-800">키워드</h1>
+
+    <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+    <!-- D4: 관심 키워드 등록. 대시보드 TOP 10 차트가 이 목록을 기준으로 집계한다 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">관심 키워드 등록</h6>
+        </div>
+        <div class="card-body">
+            <form th:action="@{/keywords}" method="post" class="form-inline">
+                <input type="text" name="word" maxlength="50" required class="form-control mr-2 mb-2"
+                       placeholder="예: 生成AI, 반도체" style="min-width: 260px">
+                <button type="submit" class="btn btn-primary mb-2">등록</button>
+            </form>
+            <p class="small text-gray-600 mb-0">기사 제목에 키워드가 들어 있으면 센다 (대소문자 무시, 최근 7일).</p>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary" th:text="'등록된 키워드 ' + ${#lists.size(items)} + '개'">등록된 키워드</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                    <tr>
+                        <th>키워드</th>
+                        <th>최근 7일 기사 수</th>
+                        <th>기사 보기</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="k : ${items}">
+                        <td th:text="${k.word}">AI</td>
+                        <td th:text="${k.cnt} + '건'">0건</td>
+                        <td><a th:href="@{/articles(q=${k.word})}">검색</a></td>
+                        <td>
+                            <form th:action="@{/keywords/{id}/delete(id=${k.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-secondary">삭제</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(items)}">
+                        <td colspan="4" class="text-center text-gray-600">등록된 키워드가 없습니다.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

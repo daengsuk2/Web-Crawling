@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>소스</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="h3 mb-4 text-gray-800">소스</h1>
+
+    <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+    <!-- D6: 소스 on/off와 수집 주기 변경. 크롤러가 다음 tick부터 반영한다 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">소스 관리</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                    <tr>
+                        <th>이름</th>
+                        <th>유형</th>
+                        <th>주소</th>
+                        <th>수집 주기 (분)</th>
+                        <th>마지막 수집</th>
+                        <th>상태</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="s : ${sources}">
+                        <td th:text="${s.name}">Zenn</td>
+                        <td th:text="${s.type}">RSS</td>
+                        <td class="small" th:text="${s.url}">https://zenn.dev/feed</td>
+                        <td>
+                            <form th:action="@{/sources/{id}/interval(id=${s.id})}" method="post" class="form-inline flex-nowrap">
+                                <input type="number" name="minutes" th:value="${s.intervalMin}"
+                                       min="10" max="1440" required class="form-control form-control-sm mr-2" style="width: 80px">
+                                <button type="submit" class="btn btn-sm btn-outline-primary">변경</button>
+                            </form>
+                        </td>
+                        <td class="text-nowrap" th:text="${@timeFmt.format(s.lastCrawledAt, 'yyyy-MM-dd HH:mm')}">-</td>
+                        <td>
+                            <form th:action="@{/sources/{id}/toggle(id=${s.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm"
+                                        th:classappend="${s.enabled} ? 'btn-success' : 'btn-secondary'"
+                                        th:text="${s.enabled} ? 'ON' : 'OFF'">ON</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(sources)}">
+                        <td colspan="6" class="text-center text-gray-600">등록된 소스가 없습니다.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="small text-gray-600 mb-0">
+                수집 주기는 10분 이상만 가능합니다(크롤링 윤리). 변경한 주기와 ON/OFF는 크롤러가 다음 실행(tick)부터 반영합니다.
+            </p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

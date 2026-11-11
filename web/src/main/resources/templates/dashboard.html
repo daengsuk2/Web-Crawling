@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>대시보드</title>
+    <meta http-equiv="refresh" content="60"> <!-- D7: 60초 자동 갱신 -->
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="h3 mb-4 text-gray-800">대시보드</h1>
+
+    <!-- D1: 요약 카드 -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-2">
+            <div class="card border-left-primary shadow py-2">
+                <div class="card-body py-2">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">총 기사 수</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800"
+                         th:text="${#numbers.formatInteger(summary.totalArticles, 1, 'COMMA')} + '건'">0건</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-2">
+            <div class="card border-left-success shadow py-2">
+                <div class="card-body py-2">
+                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">오늘 신규</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${summary.todayNew} + '건'">0건</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-2">
+            <div class="card border-left-info shadow py-2">
+                <div class="card-body py-2">
+                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">활성 소스</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${summary.enabledSources} + '개'">0개</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-2">
+            <div class="card border-left-warning shadow py-2">
+                <div class="card-body py-2">
+                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">마지막 수집</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        <span th:text="${summary.lastCrawl}">3분 전</span>
+                        <!-- D1: 마지막 수집이 가장 짧은 주기의 2배를 넘으면 정지 의심 -->
+                        <span class="badge badge-danger ml-1 align-middle" th:if="${summary.stalled}">수집기 정지 의심</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- D3, D4: 차트 -->
+    <div class="row">
+        <div class="col-xl-7 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">시간대별 신규 기사 (최근 24시간)</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="hourlyChart" height="110"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-5 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">키워드 TOP 10 (최근 7일)</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="keywordChart" height="150"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- D5: 수집 이력 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">최근 수집 이력
+                <a class="small ml-2 font-weight-normal" th:href="@{/runs}">전체 보기</a></h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                    <tr>
+                        <th>시작 시각</th>
+                        <th>수집원</th>
+                        <th>결과</th>
+                        <th>수집</th>
+                        <th>신규</th>
+                        <th>갱신</th>
+                        <th>오류</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="r : ${runs}">
+                        <td th:text="${@timeFmt.format(r.startedAt, 'yyyy-MM-dd HH:mm:ss')}">-</td>
+                        <td th:text="${r.source.name}">Zenn</td>
+                        <td>
+                            <span class="badge" th:text="${r.status}"
+                                  th:classappend="${r.status == 'SUCCESS'} ? 'badge-success' : (${r.status == 'FAILED'} ? 'badge-danger' : 'badge-secondary')">SUCCESS</span>
+                        </td>
+                        <td th:text="${r.fetchedCount}">0</td>
+                        <td th:text="${r.insertedCount}">0</td>
+                        <td th:text="${r.updatedCount}">0</td>
+                        <td class="text-danger small" th:text="${r.errorMessage}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(runs)}">
+                        <td colspan="7" class="text-center text-gray-600">수집 이력이 없습니다.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="script">
+    <script th:src="@{/vendor/chart.js/Chart.min.js}"></script>
+    <script th:inline="javascript">
+        const hourly = /*[[${hourly}]]*/ { labels: [], values: [] };
+        const keywords = /*[[${keywords}]]*/ { labels: [], values: [] };
+        const intTicks = { beginAtZero: true, precision: 0 };
+
+        new Chart(document.getElementById('hourlyChart'), {
+            type: 'line',
+            data: { labels: hourly.labels, datasets: [{ label: '신규 기사', data: hourly.values,
+                borderColor: '#4e73df', backgroundColor: 'rgba(78,115,223,0.1)', lineTension: 0.2 }] },
+            options: { legend: { display: false }, scales: { yAxes: [{ ticks: intTicks }] } }
+        });
+
+        new Chart(document.getElementById('keywordChart'), {
+            type: 'horizontalBar',
+            data: { labels: keywords.labels, datasets: [{ label: '기사 수', data: keywords.values, backgroundColor: '#1cc88a' }] },
+            options: { legend: { display: false }, scales: { xAxes: [{ ticks: intTicks }] } }
+        });
+    </script>
+</th:block>
+</body>
+</html>

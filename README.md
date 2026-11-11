@@ -23,6 +23,14 @@ npm run once   # crawl every enabled source once
 npm start      # scheduler: tick every minute, per-source interval_min
 ```
 
+## Run (week 2: dashboard)
+Needs JDK 21 and the DB from above. The password is read from the environment, never from a file.
+```bash
+cd web
+DB_PASSWORD=radar1234 ./gradlew bootRun
+```
+Open http://localhost:8080. Optional overrides: `DB_URL`, `DB_USER`.
+
 ## Data source
 - Zenn RSS `https://zenn.dev/feed` (robots.txt only disallows `/search`).
 - Request rules: custom User-Agent, 10s timeout, 1s sleep between sources, `interval_min` 30.
@@ -48,13 +56,13 @@ npm start      # scheduler: tick every minute, per-source interval_min
 - [x] R8 1s sleep between sources, `last_crawled_at` updated in `finally`
 
 ### Dashboard (week 2)
-- [ ] D1 summary cards
-- [ ] D2 article list
-- [ ] D3 hourly new-article line chart
-- [ ] D4 keyword TOP 10 bar chart
-- [ ] D5 crawl history + failures
-- [ ] D6 source on/off
-- [ ] D7 auto refresh (60s)
+- [x] D1 summary cards
+- [x] D2 article list (latest 10 on the dashboard, paged list at `/articles`)
+- [x] D3 hourly new-article line chart
+- [x] D4 keyword TOP 10 bar chart
+- [x] D5 crawl history + failures
+- [x] D6 source on/off
+- [x] D7 auto refresh (60s, `<meta http-equiv="refresh">`)
 
 ## AI usage
 See [docs/prompt-log.md](docs/prompt-log.md).

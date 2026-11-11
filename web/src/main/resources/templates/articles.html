@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>기사</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="h3 mb-4 text-gray-800">기사</h1>
+
+    <!-- D2: 제목 검색 + 소스 필터 + 서버 페이징 -->
+    <div class="card shadow mb-4">
+        <div class="card-body pb-2">
+            <form th:action="@{/articles}" method="get" class="form-inline">
+                <input type="text" name="q" th:value="${q}" class="form-control mr-2 mb-2"
+                       placeholder="제목 검색 (예: 生成AI)" style="min-width: 260px">
+                <select name="sourceId" class="form-control mr-2 mb-2">
+                    <option value="">전체 소스</option>
+                    <option th:each="s : ${sources}" th:value="${s.id}" th:text="${s.name}"
+                            th:selected="${sourceId != null and sourceId == s.id}">Zenn</option>
+                </select>
+                <button type="submit" class="btn btn-primary mr-2 mb-2">검색</button>
+                <a th:href="@{/articles}" class="btn btn-secondary mb-2">초기화</a>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary" th:text="'검색 결과 ' + ${page.totalElements} + '건'">검색 결과 0건</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                    <tr>
+                        <th>수집 시각</th>
+                        <th>발행 시각</th>
+                        <th>출처</th>
+                        <th>제목 (원문 링크)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="a : ${page.content}">
+                        <td class="text-nowrap" th:text="${@timeFmt.format(a.firstSeenAt, 'yyyy-MM-dd HH:mm')}">-</td>
+                        <td class="text-nowrap" th:text="${@timeFmt.format(a.publishedAt, 'yyyy-MM-dd HH:mm')}">-</td>
+                        <td th:text="${a.source.name}">Zenn</td>
+                        <td><a th:href="${a.url}" th:text="${a.title}" target="_blank" rel="noopener">제목</a></td>
+                    </tr>
+                    <tr th:if="${page.empty}">
+                        <td colspan="4" class="text-center text-gray-600">조건에 맞는 기사가 없습니다.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <nav th:if="${page.totalPages > 1}">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                        <a class="page-link" th:href="@{/articles(page=${page.number - 1}, q=${q}, sourceId=${sourceId})}">이전</a></li>
+                    <li class="page-item disabled">
+                        <span class="page-link" th:text="${page.number + 1} + ' / ' + ${page.totalPages}">1 / 1</span></li>
+                    <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                        <a class="page-link" th:href="@{/articles(page=${page.number + 1}, q=${q}, sourceId=${sourceId})}">다음</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+</body>
+</html>

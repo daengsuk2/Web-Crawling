@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- flash messages set by the controller after a POST -->
+<div th:fragment="alerts">
+    <div class="alert alert-success" role="alert" th:if="${message != null}" th:text="${message}"></div>
+    <div class="alert alert-danger" role="alert" th:if="${error != null}" th:text="${error}"></div>
+</div>
+</body>
+</html>

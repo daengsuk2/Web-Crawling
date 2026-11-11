@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>수집 이력</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h1 class="h3 mb-4 text-gray-800">수집 이력</h1>
+
+    <!-- D5: 실행 이력. 실패는 빨간 배지와 에러 메시지로 보인다 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary" th:text="'전체 ' + ${page.totalElements} + '회'">전체 0회</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                    <tr>
+                        <th>시작 시각</th>
+                        <th>소요</th>
+                        <th>수집원</th>
+                        <th>결과</th>
+                        <th>수집</th>
+                        <th>신규</th>
+                        <th>갱신</th>
+                        <th>오류</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="r : ${page.content}">
+                        <td class="text-nowrap" th:text="${@timeFmt.format(r.startedAt, 'yyyy-MM-dd HH:mm:ss')}">-</td>
+                        <td class="text-nowrap" th:text="${@timeFmt.seconds(r.startedAt, r.finishedAt)}">-</td>
+                        <td th:text="${r.source.name}">Zenn</td>
+                        <td>
+                            <span class="badge" th:text="${r.status}"
+                                  th:classappend="${r.status == 'SUCCESS'} ? 'badge-success' : (${r.status == 'FAILED'} ? 'badge-danger' : 'badge-secondary')">SUCCESS</span>
+                        </td>
+                        <td th:text="${r.fetchedCount}">0</td>
+                        <td th:text="${r.insertedCount}">0</td>
+                        <td th:text="${r.updatedCount}">0</td>
+                        <td class="text-danger small" th:text="${r.errorMessage}"></td>
+                    </tr>
+                    <tr th:if="${page.empty}">
+                        <td colspan="8" class="text-center text-gray-600">수집 이력이 없습니다.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <nav th:if="${page.totalPages > 1}">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                        <a class="page-link" th:href="@{/runs(page=${page.number - 1})}">이전</a></li>
+                    <li class="page-item disabled">
+                        <span class="page-link" th:text="${page.number + 1} + ' / ' + ${page.totalPages}">1 / 1</span></li>
+                    <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                        <a class="page-link" th:href="@{/runs(page=${page.number + 1})}">다음</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+</body>
+</html>
